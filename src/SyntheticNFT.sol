@@ -103,7 +103,7 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
     address contractAddr, 
     uint256 tokenId
     ) payable external nonReentrant returns (uint256) {
-    require(msg.value == _mintPrice, "SyntheticNFT: invalid price");
+    require(msg.value >= _mintPrice, "SyntheticNFT: invalid price");
 
     uint curr;
     bytes32 hash = keccak256(abi.encode(contractAddr, tokenId));
@@ -118,11 +118,11 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
     _tokenId2contract[curr] = contractAddr;
     _tokenId2oriTokenId[curr] = tokenId;
 
-    _etherBalances[curr] += _mintPrice;
+    _etherBalances[curr] += msg.value;
 
     _mint(to, curr);
 
-    emit Mint(to, contractAddr, tokenId, curr, _mintPrice);
+    emit Mint(to, contractAddr, tokenId, curr, msg.value);
     return curr;
   }  
 

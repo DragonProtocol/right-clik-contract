@@ -117,7 +117,7 @@ contract SyntheticNFTTest is DSTest {
         _syntheticNFT.mint{value: _price - 1}(address(0x3), address(_gameItem), tokenId1);
     }
 
-    function testFailMintHighValue() public {
+    function testMintHighValue() public {
         uint tokenId1 = _gameItem.awardItem(address(0x1), "http://aaa.json");
         _syntheticNFT.mint{value: _price + 1}(address(0x3), address(_gameItem), tokenId1);
     }
