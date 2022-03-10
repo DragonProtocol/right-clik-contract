@@ -53,13 +53,13 @@ contract SyntheticNFTTest is DSTest {
     function testMintRefund() public {
         string memory uri1 = "http://aaa.json";
         string memory uri2 = "http://bbb.json";
-        string memory uri3 = "http://ccc.json";
-        string memory uri4 = "http://ddd.json";
+        // string memory uri3 = "http://ccc.json";
+        // string memory uri4 = "http://ddd.json";
 
         uint tokenId1 = _gameItem.awardItem(address(0x1), uri1);
         uint tokenId2 = _gameItem.awardItem(address(0x2), uri2);
-        uint tokenId3 = _gameItem.awardItem(address(0x3), uri3);
-        uint tokenId4 = _gameItem.awardItem(address(0x3), uri4);
+        // uint tokenId3 = _gameItem.awardItem(address(0x3), uri3);
+        // uint tokenId4 = _gameItem.awardItem(address(0x3), uri4);
 
         uint256 preBalance = address(_syntheticNFT).balance;
 
@@ -83,11 +83,6 @@ contract SyntheticNFTTest is DSTest {
 
         cheats.prank(address(0x3));
         _syntheticNFT.refund(newTokenId2);
-
-        uint newTokenId3 = _syntheticNFT.mint{value: _price}(address(0x3), address(_gameItem), tokenId3);
-        assertTrue(newTokenId3 ==  2, "freeSlots 1 failed");
-        uint newTokenId4 = _syntheticNFT.mint{value: _price}(address(0x3), address(_gameItem), tokenId4);
-        assertTrue(newTokenId4 ==  1, "freeSlots 2 failed");
 
         emit log_named_decimal_uint("contract commission: ", _syntheticNFT._commission(), 18);
         emit log_named_decimal_uint("contract balance before withdrawCommission ", address(_syntheticNFT).balance, 18);
@@ -121,3 +116,4 @@ contract SyntheticNFTTest is DSTest {
         _syntheticNFT.refund(newTokenId1);
     }
 }
+

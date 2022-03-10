@@ -3,15 +3,11 @@
 
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
  * @notice Implementation of synthetic NFT function based on openzepping's ERC721 contract.
@@ -20,33 +16,25 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
  * new NFT.
  */
 contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
-  using ECDSA for bytes32;
-  using Strings for uint256;
-  using Counters for Counters.Counter;
-  
-  Counters.Counter private _tokenIdTracker;
 
   uint256 public constant _price = 0.01 ether;
 
-  // from new tokenId to original URI
-  mapping(uint256 => string) public _uris;
+  // from new tokenId to original contract address
+  mapping(uint256 => address) public _tokenId2contract;
+  
+  // from new tokenId to original tokenId
+  mapping(uint256 => uint256) public _tokenId2oriTokenId;
+
   // we only allow unique original existing NFT.
   mapping(bytes32 => bool) public _uniques;
   
-  // used to recycle tokenIds when mint and burn
-  uint256 [] private _freeSlots;
-
   // 5% commission 
   uint256 public _commission;
 
-  event Mint(address indexed to, address indexed contractAdddr, uint256 indexed tokenId, uint256 newTokenId, string uri);
+  event Mint(address indexed to, address indexed contractAdddr, uint256 indexed tokenId, uint256 newTokenId);
   event Refund(uint256 indexed tokenId, uint256 amount);
 
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {
-    // Start token IDs at 1
-    _tokenIdTracker.increment();
-    // create array for tokenId's free slots
-    _freeSlots = new uint256[](0);
   }
 
   /**
@@ -54,8 +42,9 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
    * @param tokenId The id of the token.
    */
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    require(_exists(tokenId), "URI query for nonexistent token");
-    return _uris[tokenId];
+    require(_exists(tokenId), "SyntheticNFT: URI query for nonexistent token");
+    string memory uri = IERC721Metadata(_tokenId2contract[tokenId]).tokenURI(_tokenId2oriTokenId[tokenId]);
+    return uri;
   }
 
   /**
@@ -76,24 +65,13 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
     require(_uniques[hash] == false, "SyntheticNFT: repeated NFT");
     _uniques[hash] = true;
 
-    uint curr = _tokenIdTracker.current();
-    bool useSlot = (_freeSlots.length > 0);
+    uint curr = totalSupply();
+    _tokenId2contract[curr] = contractAddr;
+    _tokenId2oriTokenId[curr] = tokenId;
 
-    if(useSlot) {
-      curr = _freeSlots[_freeSlots.length-1];
-      _freeSlots.pop();
-    }
-
-    string memory uri = IERC721Metadata(contractAddr).tokenURI(tokenId);
-    _uris[curr] = uri;
-    
     _mint(to, curr);
-    if(!useSlot) {
-      _tokenIdTracker.increment();
-    }
 
-    emit Mint(to, contractAddr, tokenId, curr, uri);
-
+    emit Mint(to, contractAddr, tokenId, curr);
     return curr;
   }  
 
@@ -104,7 +82,9 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
   function refund(uint256 tokenId) external nonReentrant {
     require(ownerOf(tokenId) == msg.sender, "SyntheticNFT: must own token");
     _burn(tokenId);
-    _freeSlots.push(tokenId);
+
+    delete _tokenId2contract[tokenId];
+    delete _tokenId2oriTokenId[tokenId];
 
     uint256 amount = _price * 95 / 100;
     _commission += _price * 5 / 100;
