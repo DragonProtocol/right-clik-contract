@@ -17,7 +17,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
 
-  uint256 public constant _price = 0.01 ether;
+  uint256 public constant _mintPrice = 0.1 ether;
+  // 10% percent
+  uint256 public constant _burnDiscount = 10; 
+  // 5% percent
+  uint256 public constant _transferDiscount = 5;
 
   // from new tokenId to original contract address
   mapping(uint256 => address) public _tokenId2contract;
@@ -26,15 +30,24 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
   mapping(uint256 => uint256) public _tokenId2oriTokenId;
 
   // we only allow unique original existing NFT.
-  mapping(bytes32 => bool) public _uniques;
+  mapping(bytes32 => uint256) public _uniques;
   
+  // for tokenId to ether balance which change when mint, transfer
+  mapping(uint256 => uint256) public _etherBalances;
+
   // 5% commission 
   uint256 public _commission;
 
-  event Mint(address indexed to, address indexed contractAdddr, uint256 indexed tokenId, uint256 newTokenId);
-  event Refund(uint256 indexed tokenId, uint256 amount);
+  // new tokenId for next NFT
+  uint256 public _nextTokenId;
+
+  event Mint(address indexed to, address indexed contractAdddr, uint256 indexed tokenId, uint256 newTokenId, uint256 amount);
+  event Refund(uint256 indexed tokenId, uint256 amount, uint256 discount);
+  event TransferDiscount(address indexed from, address indexed to, uint256 indexed tokenId, uint256 amount, uint256 discount);
+  event CommissionWithdrawn(uint256 amount);
 
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {
+    _nextTokenId = 1;
   }
 
   /**
@@ -58,20 +71,27 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
     address to, 
     address contractAddr, 
     uint256 tokenId
-    ) payable external returns (uint256) {
-    require(msg.value == _price, "SyntheticNFT: invalid price");
+    ) payable external nonReentrant returns (uint256) {
+    require(msg.value == _mintPrice, "SyntheticNFT: invalid price");
 
+    uint curr;
     bytes32 hash = keccak256(abi.encode(contractAddr, tokenId));
-    require(_uniques[hash] == false, "SyntheticNFT: repeated NFT");
-    _uniques[hash] = true;
+    if(_uniques[hash] > 0) {
+      curr = _uniques[hash];
+      require(!_exists(curr), "SyntheticNFT: already minted");
+    } else {
+      curr = _nextTokenId++;
+      _uniques[hash] = curr;
+    }
 
-    uint curr = totalSupply();
     _tokenId2contract[curr] = contractAddr;
     _tokenId2oriTokenId[curr] = tokenId;
 
+    _etherBalances[curr] += _mintPrice;
+
     _mint(to, curr);
 
-    emit Mint(to, contractAddr, tokenId, curr);
+    emit Mint(to, contractAddr, tokenId, curr, _mintPrice);
     return curr;
   }  
 
@@ -83,16 +103,17 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
     require(ownerOf(tokenId) == msg.sender, "SyntheticNFT: must own token");
     _burn(tokenId);
 
-    delete _tokenId2contract[tokenId];
-    delete _tokenId2oriTokenId[tokenId];
+    uint256 discount = _etherBalances[tokenId] * _burnDiscount / 100;
+    uint256 amount = _etherBalances[tokenId] - discount;
 
-    uint256 amount = _price * 95 / 100;
-    _commission += _price * 5 / 100;
+    _commission += discount;
+
+    delete _etherBalances[tokenId];
 
     // Refund the token owner 95% of the mint price.
     payable(msg.sender).transfer(amount);
 
-    emit Refund(tokenId, amount);
+    emit Refund(tokenId, amount, discount);
   }
 
   /**
@@ -102,6 +123,7 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
     uint256 amount = _commission;
     _commission = 0;
     payable(msg.sender).transfer(amount);
+    emit CommissionWithdrawn(amount);
     return amount;
   }
 
@@ -135,6 +157,14 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
     uint256 tokenId
   ) internal override whenNotPaused {
     super._beforeTokenTransfer(from, to, tokenId);
+    if(from != to && from != address(0) && to != address(0)) {
+      uint256 amount = _etherBalances[tokenId];
+      uint256 discount = _etherBalances[tokenId] * _transferDiscount / 100;
+
+      _etherBalances[tokenId] -= discount;
+      _commission += discount; 
+      emit TransferDiscount(from, to, tokenId, amount, discount);
+    }
   }
 
 }
