@@ -39,6 +39,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
 /**
  * @notice Implementation of synthetic NFT function based on openzepping's ERC721 contract.
@@ -72,6 +74,9 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
   // new tokenId for next NFT
   uint256 public _nextTokenId;
 
+  bytes4 constant internal INTERFACE_SIGNATURE_ERC721 = 0x80ac58cd;
+  bytes4 constant internal INTERFACE_SIGNATURE_ERC1155 = 0xd9b67a26;
+
   event Mint(address indexed to, address indexed contractAdddr, uint256 indexed tokenId, uint256 newTokenId, uint256 amount);
   event Refund(uint256 indexed tokenId, uint256 amount, uint256 discount);
   event TransferDiscount(address indexed from, address indexed to, uint256 indexed tokenId, uint256 amount, uint256 discount);
@@ -87,8 +92,47 @@ contract SyntheticNFT is ERC721Enumerable, ReentrancyGuard, Ownable, Pausable {
    */
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     require(_exists(tokenId), "SyntheticNFT: URI query for nonexistent token");
-    string memory uri = IERC721Metadata(_tokenId2contract[tokenId]).tokenURI(_tokenId2oriTokenId[tokenId]);
-    return uri;
+
+    IERC165 tokenInterface = IERC165(_tokenId2contract[tokenId]);
+
+    if(tokenInterface.supportsInterface(INTERFACE_SIGNATURE_ERC1155)) {
+      return IERC1155MetadataURI(_tokenId2contract[tokenId]).uri(_tokenId2oriTokenId[tokenId]);
+    }
+    if(tokenInterface.supportsInterface(INTERFACE_SIGNATURE_ERC721)) {
+      return IERC721Metadata(_tokenId2contract[tokenId]).tokenURI(_tokenId2oriTokenId[tokenId]);
+    }
+
+    require(false, "only support 721 or 1155 token");
+    return "";
+  }
+
+  /**
+   * @notice check if token exist.
+   * @param tokenId The id of the token.
+   */
+  function exists(uint256 tokenId) public view returns (bool) {
+    return _exists(tokenId);
+  }
+
+  /**
+   * @notice check original nft or erc1155 has been copied in this contract,
+   * @param contractAddr contract address of existing NFT collection, must implement tokenURI function
+   * @param tokenId tokenId of existing NFT
+   */
+  function copied(address contractAddr, uint256 tokenId) public view returns (bool) {
+    bytes32 hash = keccak256(abi.encode(contractAddr, tokenId));
+    return _uniques[hash] > 0 && _exists(_uniques[hash]);
+  }
+
+  /**
+   * @notice get new tokenId for original nft contract address and tokenId,
+   * @param contractAddr contract address of existing NFT collection, must implement tokenURI function
+   * @param tokenId tokenId of existing NFT
+   */
+  function getTokenIdFromOriginal(address contractAddr, uint256 tokenId) public view returns (uint256) {
+    bytes32 hash = keccak256(abi.encode(contractAddr, tokenId));
+    uint256 newTokenId = _uniques[hash];
+    return _exists(newTokenId) ? newTokenId : 0;
   }
 
   /**

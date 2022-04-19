@@ -7,6 +7,8 @@ import "src/SyntheticNFT.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+
 
 contract GameItem is ERC721URIStorage {
     using Counters for Counters.Counter;
@@ -36,6 +38,7 @@ contract SyntheticNFTTest is DSTest {
 
     SyntheticNFT _syntheticNFT;
     GameItem _gameItem;
+    ERC1155  _erc1155;
     CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
 
     uint256 public constant _price = 0.1 ether;
@@ -46,6 +49,7 @@ contract SyntheticNFTTest is DSTest {
         // owner = 0xb4c79daB8f259C7Aee6E5b2Aa729821864227e84;
         _syntheticNFT = new SyntheticNFT("synthetic NFT", "SNFT");
         _gameItem = new GameItem();
+        _erc1155 = new ERC1155("http://bbb.json");
     }
 
     fallback() external payable {}
@@ -55,6 +59,13 @@ contract SyntheticNFTTest is DSTest {
         string memory uri1 = "http://aaa.json";
         uint tokenId1 = _gameItem.awardItem(address(0x1), uri1);
         uint newTokenId1 = _syntheticNFT.mint{value: _price}(address(0x3), address(_gameItem), tokenId1);
+        assertTrue(keccak256(abi.encode(_syntheticNFT.tokenURI(newTokenId1))) == keccak256(abi.encode(uri1)), "tokenURI failed");
+    }
+
+    function testERC1155TokenURI() public {
+        string memory uri1 = "http://bbb.json";
+        uint tokenId1 = 1;
+        uint newTokenId1 = _syntheticNFT.mint{value: _price}(address(0x3), address(_erc1155), tokenId1);
         assertTrue(keccak256(abi.encode(_syntheticNFT.tokenURI(newTokenId1))) == keccak256(abi.encode(uri1)), "tokenURI failed");
     }
 
