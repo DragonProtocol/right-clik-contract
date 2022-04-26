@@ -175,6 +175,7 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
    * @param tokenId The id of the token to refund.
    */
   function refund(uint256 tokenId) external nonReentrant {
+    require(_exists(tokenId), "SyntheticNFT: refund for nonexistent token");
     require(ownerOf(tokenId) == msg.sender, "SyntheticNFT: must own token");
     
     _burn(tokenId);
