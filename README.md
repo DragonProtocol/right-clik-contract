@@ -6,11 +6,13 @@ A contract for synthetizing your favourite NFT from NFT market, etc opensea.
 
 ## Features
 
-- ERC721 standard implement based on OpenZeppelin contract library
+- ERC721 standard implement based on chiru-labs ERC721A contract library 
+- Utils functions based on OpenZeppelin contract library  
 - Can inject Ethers when mint, withdraw Ethers when burn.
 - Support ERC1155 token 
 
 [OpenZeppelin Github Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) 
+[chiru-labs ERC721A Github Contracts](https://github.com/chiru-labs/ERC721A)
 
 ## Installation
 
@@ -71,9 +73,8 @@ To run tests, run the following command
 
 
 ## Learn More
- - When mint, you need to inject at least 0.1 ether as asset of NFT.
- - When tranfer NFT, 5% of leftover ether asset will be charged as commission.
- - When refund/burn NFT, 10% of leftover ether asset will be charged as commission.
+ - When mint, you can inject some ether as asset of NFT.
+ - When refund/burn NFT, ether asset will be withdrawn.
 ## Contributing
 
 Contributions are always welcome!
