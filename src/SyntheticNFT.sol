@@ -73,6 +73,12 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
   /// constant interface signator for ERC1155
   bytes4 constant internal INTERFACE_SIGNATURE_ERC1155 = 0xd9b67a26;
 
+  /// bonding curve M parameter, bonding curve formula is y = mx^2
+  uint256 constant internal BOND_CURVE_M = 2 * 10**8;
+  
+  /// base ether price for minting
+  uint256 constant internal BASE_PRICE = 0.001 ether;
+
   /**
    * @dev Emitted when `newTokenId` token is minted to `to` based on `contractAddr` and `tokenId`, msg.sender will pay `amount` ether.
    */
@@ -89,6 +95,14 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
    * @param symbol NFT collection symbol
    */
   constructor(string memory name, string memory symbol) ERC721A(name, symbol) {
+  }
+
+  /**
+   * @dev calculate current ether price for minting based on NFT total supply
+   * @return uint256 ether price for minting
+   */
+  function calcMintPrice() public view returns (uint256) {
+    return BASE_PRICE + BOND_CURVE_M * totalSupply() * totalSupply();
   }
 
   /**
@@ -152,6 +166,10 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     address contractAddr, 
     uint256 tokenId
     ) payable external nonReentrant returns (uint256) {
+
+    uint price = calcMintPrice();
+    require(msg.value >= price, "SyntheticNFT: insufficient ether"); 
+    
     require(_uniques[contractAddr][tokenId] == 0, "SyntheticNFT: already minted");
 
     uint curr = _currentIndex;
