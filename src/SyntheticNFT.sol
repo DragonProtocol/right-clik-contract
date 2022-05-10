@@ -41,6 +41,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import "erc721a/contracts/ERC721A.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title A synthetic tool NFT contract
@@ -115,15 +116,21 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
 
     IERC165 tokenInterface = IERC165(_tokenIdToContract[tokenId]);
 
+    string memory uri;
+
     if(tokenInterface.supportsInterface(INTERFACE_SIGNATURE_ERC1155)) {
-      return IERC1155MetadataURI(_tokenIdToContract[tokenId]).uri(_tokenIdToOriTokenId[tokenId]);
-    }
+      uri = IERC1155MetadataURI(_tokenIdToContract[tokenId]).uri(_tokenIdToOriTokenId[tokenId]);
+    } else
     if(tokenInterface.supportsInterface(INTERFACE_SIGNATURE_ERC721)) {
-      return IERC721Metadata(_tokenIdToContract[tokenId]).tokenURI(_tokenIdToOriTokenId[tokenId]);
+      uri = IERC721Metadata(_tokenIdToContract[tokenId]).tokenURI(_tokenIdToOriTokenId[tokenId]);
+    } else {
+      require(false, "only support 721 or 1155 token");
     }
 
-    require(false, "only support 721 or 1155 token");
-    return "";
+    uri = stringReplace(uri, "0x{id}", Strings.toHexString(_tokenIdToOriTokenId[tokenId]));
+    uri = stringReplace(uri, "{id}", Strings.toString(_tokenIdToOriTokenId[tokenId]));
+
+    return uri;
   }
 
   /**
@@ -169,7 +176,7 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
 
     uint price = calcMintPrice();
     require(msg.value >= price, "SyntheticNFT: insufficient ether"); 
-    
+
     require(_uniques[contractAddr][tokenId] == 0, "SyntheticNFT: already minted");
 
     uint curr = _currentIndex;
@@ -234,6 +241,54 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
   ) internal override whenNotPaused {
     super._beforeTokenTransfers(from, to, startTokenId, quantity);
   }
+
+
+  function bytesCompare(bytes memory buf, uint idx, bytes memory rep) internal pure returns (bool) {
+    if((buf.length-idx) < rep.length) {
+        return false;
+    }
+
+    for(uint i=0; i<rep.length; i++) {
+        if(buf[i+idx] != rep[i]) {
+            return false;
+        }
+    }
+    return true;
+  }
+
+  /**
+   * @dev utils string function to replace '0x{id}' to actual tokenId
+   */
+  function stringReplace(string memory str, string memory src, string memory dst) internal pure returns (string memory) {
+    bytes memory bstr = bytes(str);
+    bytes memory bsrc = bytes(src);
+    bytes memory bdst = bytes(dst);
+
+    uint len = 0;
+    for(uint i=0; i<bstr.length; i++) {
+        if(bytesCompare(bstr, i, bsrc)) {
+            len = len + bdst.length;
+            i += bsrc.length - 1;
+        } else {
+            len++;
+        }
+    }
+
+    bytes memory ret = new bytes(len);
+    uint j = 0;
+    for(uint i=0; i<bstr.length; i++) {
+        if(bytesCompare(bstr, i, bsrc)) {
+            for(uint k=0; k<bdst.length; k++) {
+                ret[j++] = bdst[k];
+            }
+            i += bsrc.length - 1;
+        } else {
+            ret[j++] = bstr[i];
+        }
+    }
+
+    return string(ret);
+  } 
 
 }
 
