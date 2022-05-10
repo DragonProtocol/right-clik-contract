@@ -1,3 +1,6 @@
 [submodule "lib/stringsex/stringsex/lib/ds-test"]
 	path = lib/stringsex/stringsex/lib/ds-test
 	url = https://github.com/dapphub/ds-test
+[submodule "lib/utils/lib/ds-test"]
+	path = lib/utils/lib/ds-test
+	url = https://github.com/dapphub/ds-test
