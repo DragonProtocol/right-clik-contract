@@ -74,7 +74,36 @@ To run tests, run the following command
 
 ## Learn More
  - When mint, you can inject some ether as asset of NFT.
+ 
  - When refund/burn NFT, ether asset will be withdrawn.
+
+   
+## Bonding Curve:
+
+ The core concept of a bonding curve is quite simple: The price of a token is determined by its supply. The more tokens that have been distributed, the higher the price
+
+![Alt text](https://forum.aeternity.com/uploads/db0917/original/2X/d/df85266d727d904b95648b820b1b78ffaf56b58f.jpeg "Title")
+ 
+ - New NFT can be minted (bought) at any time according to a price set by the contract.
+ - This price increases as token supply grows.
+ - The ether paid for tokens is kept in the contract (reserve pool).
+ - At any point in time, NFT can be burned (sold) back to the contract.
+
+we take a simple curve formula: y = mx^2, with a base of 0.001 ether.
+
+
+```javascript
+
+  function calcMintPrice() public view returns (uint256) {
+    return BASE_PRICE + BOND_CURVE_M * totalSupply() * totalSupply();
+  }   
+
+```
+
+[An introduction to bonding curves](https://medium.com/linum-labs/intro-to-bonding-curves-and-shapes-bf326bc4e11a)
+
+
+
 ## Contributing
 
 Contributions are always welcome!
