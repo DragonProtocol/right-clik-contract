@@ -32,7 +32,7 @@ $´´´´´´´´´$$$$$$´´´´´´´´´´$$$$´´´´´´´´´´´$
 
 */
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
