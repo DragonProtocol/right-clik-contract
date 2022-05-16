@@ -41,7 +41,7 @@ contract SyntheticNFTTest is DSTest {
     ERC1155  _erc1155;
     CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
 
-    uint256 public constant _price = 0.0005 ether;
+    uint256 public constant _price = 0.001 ether;
 
     function setUp() public {
         _syntheticNFT = new SyntheticNFT("synthetic NFT", "SNFT");

@@ -76,7 +76,7 @@ contract SyntheticNFT is ERC721A {
   uint256 constant internal BOND_CURVE_M = 1 * 10**8;
   
   /// base ether price for minting
-  uint256 constant internal BASE_PRICE = 0.0005 ether;
+  uint256 constant internal BASE_PRICE = 0.001 ether;
 
   /**
    * @dev Emitted when `newTokenId` token is minted to `to` based on `contractAddr` and `tokenId`, msg.sender will pay `amount` ether.
