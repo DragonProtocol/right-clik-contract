@@ -123,7 +123,7 @@ contract SyntheticNFT is ERC721A {
     if(tokenInterface.supportsInterface(INTERFACE_SIGNATURE_ERC721)) {
       uri = IERC721Metadata(_tokenIdToContract[tokenId]).tokenURI(_tokenIdToOriTokenId[tokenId]);
     } else {
-      require(false, "only support 721 or 1155 token");
+      revert("only support 721 or 1155 token");
     }
 
     uri = stringReplace(uri, "0x{id}", Strings.toHexString(_tokenIdToOriTokenId[tokenId]));
