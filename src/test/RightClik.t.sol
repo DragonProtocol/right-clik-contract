@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import "ds-test/test.sol";
-import "src/SyntheticNFT.sol";
+import "src/RightClik.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -34,9 +34,9 @@ interface CheatCodes {
   function prank(address) external;
 }
 
-contract SyntheticNFTTest is DSTest {
+contract RightClikTest is DSTest {
 
-    SyntheticNFT _syntheticNFT;
+    RightClik _syntheticNFT;
     GameItem _gameItem;
     ERC1155  _erc1155;
     CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
@@ -44,7 +44,7 @@ contract SyntheticNFTTest is DSTest {
     uint256 public constant _price = 0.001 ether;
 
     function setUp() public {
-        _syntheticNFT = new SyntheticNFT("synthetic NFT", "SNFT");
+        _syntheticNFT = new RightClik("RightClik DAO NFT", "RCNFT");
         _gameItem = new GameItem();
         _erc1155 = new ERC1155("http://bbb.json");
     }
@@ -157,4 +157,3 @@ contract SyntheticNFTTest is DSTest {
         assertEq(price5, base + m*2*2);
     }
 }
-

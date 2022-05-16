@@ -1,5 +1,5 @@
 
-# SyntheticNFT contract
+# RightClik contract
 
 
 A contract for synthetizing your favourite NFT from NFT market, etc opensea.
@@ -113,5 +113,5 @@ Contributions are always welcome!
 
 ## License
 
-SyntheticNFT is released under the [MIT](https://choosealicense.com/licenses/mit/)
+RightClik is released under the [MIT](https://choosealicense.com/licenses/mit/)
 

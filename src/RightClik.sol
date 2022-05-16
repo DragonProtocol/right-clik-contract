@@ -45,14 +45,14 @@ import "erc721a/contracts/ERC721A.sol";
  * @title A synthetic tool NFT contract
  * @author jack.liu
  *
- * @notice Implementation of synthetic NFT function based on openzepping's ERC721 contract.
+ * @notice Implementation of right click NFT function based on openzepping's ERC721 contract.
  * player can synthesize a new NFT in this contract from existing NFT collection.
  * player has to pay some ether for synthesizing, he can refund the ether when burning the 
  * new NFT.
  *
  * @dev the existing NFT or ERC1155 contract must implement ERC165 standard.
  */
-contract SyntheticNFT is ERC721A {
+contract RightClik is ERC721A {
 
   /// mapping from new tokenId to original contract address
   mapping(uint256 => address) public tokenIdToContract;
