@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// synthetic NFT collection contract
+// RightClik NFT collection contract
 
 /*
 
@@ -42,7 +42,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "erc721a/contracts/ERC721A.sol";
 
 /**
- * @title A synthetic tool NFT contract
+ * @title A right click tool NFT contract
  * @author jack.liu
  *
  * @notice Implementation of right click NFT function based on openzepping's ERC721 contract.
@@ -78,6 +78,9 @@ contract RightClik is ERC721A {
   /// base ether price for minting
   uint256 constant internal BASE_PRICE = 0.001 ether;
 
+  // max NFT total supply
+  uint256 constant internal MAX_TOTAL_SUPPLY = 50000;
+
   /**
    * @dev Emitted when `newTokenId` token is minted to `to` based on `contractAddr` and `tokenId`, msg.sender will pay `amount` ether.
    */
@@ -111,7 +114,7 @@ contract RightClik is ERC721A {
    * @return string memory url of originial NFT 
    */
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    require(_exists(tokenId), "SyntheticNFT: URI query for nonexistent token");
+    require(_exists(tokenId), "RightClik: URI query for nonexistent token");
 
     IERC165 tokenInterface = IERC165(tokenIdToContract[tokenId]);
 
@@ -167,9 +170,11 @@ contract RightClik is ERC721A {
     ) payable external returns (uint256) {
 
     uint price = calcMintPrice();
-    require(msg.value >= price, "SyntheticNFT: insufficient ether"); 
+    require(msg.value >= price, "RightClik: insufficient ether"); 
 
-    require(uniques[contractAddr][tokenId] == 0, "SyntheticNFT: already minted");
+    require(uniques[contractAddr][tokenId] == 0, "RightClik: already minted");
+
+    require(totalSupply() < MAX_TOTAL_SUPPLY, "RightClik: already max totalSupply");
 
     uint curr = _currentIndex;
     uniques[contractAddr][tokenId] = curr;
@@ -192,8 +197,8 @@ contract RightClik is ERC721A {
    * @param tokenId The id of the token to refund.
    */
   function refund(uint256 tokenId) external {
-    require(_exists(tokenId), "SyntheticNFT: refund for nonexistent token");
-    require(ownerOf(tokenId) == msg.sender, "SyntheticNFT: must own token");
+    require(_exists(tokenId), "RightClik: refund for nonexistent token");
+    require(ownerOf(tokenId) == msg.sender, "RightClik: must own token");
     
     _burn(tokenId);
 

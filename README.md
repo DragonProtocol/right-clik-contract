@@ -37,17 +37,17 @@ Install dependencies：
 deploy to eth rinkeby:
 ```bash
   forge create --rpc-url https://rinkeby.infura.io/v3/${YOUR_API_CODE} \
-    --constructor-args "synthetic NFT" "SNFT" \
+    --constructor-args "RightClik DAO NFT" "RCNFT" \
     --private-key ${YOUR_PRIVATE_KEY} \
-    src/SyntheticNFT.sol:SyntheticNFT
+    src/RightClik.sol:RightClik
   
 ```
 deploy to BSC testnet:
 ```bash
   forge create --rpc-url  https://data-seed-prebsc-1-s1.binance.org:8545 \
-    --constructor-args "synthetic NFT" "SNFT" \
+    --constructor-args "RightClik DAO NFT" "RCNFT" \
     --private-key ${YOUR_PRIVATE_KEY} \
-    src/SyntheticNFT.sol:SyntheticNFT
+    src/RightClik.sol:RightClik
   
 ```
 
