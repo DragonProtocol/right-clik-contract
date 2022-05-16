@@ -73,10 +73,10 @@ contract SyntheticNFT is ERC721A {
   bytes4 constant internal INTERFACE_SIGNATURE_ERC1155 = 0xd9b67a26;
 
   /// bonding curve M parameter, bonding curve formula is y = mx^2
-  uint256 constant internal BOND_CURVE_M = 2 * 10**8;
+  uint256 constant internal BOND_CURVE_M = 1 * 10**8;
   
   /// base ether price for minting
-  uint256 constant internal BASE_PRICE = 0.001 ether;
+  uint256 constant internal BASE_PRICE = 0.0005 ether;
 
   /**
    * @dev Emitted when `newTokenId` token is minted to `to` based on `contractAddr` and `tokenId`, msg.sender will pay `amount` ether.
@@ -220,7 +220,15 @@ contract SyntheticNFT is ERC721A {
     emit Refund(tokenId, amount);
   }
 
-  function bytesCompare(bytes memory buf, uint idx, bytes memory rep) internal pure returns (bool) {
+  /**
+   * @dev utils bytes compare function used by stringReplace
+   */
+  function bytesCompare(
+    bytes memory buf, 
+    uint idx, 
+    bytes memory rep
+    ) internal pure returns (bool) {
+
     if((buf.length-idx) < rep.length) {
         return false;
     }
@@ -236,7 +244,12 @@ contract SyntheticNFT is ERC721A {
   /**
    * @dev utils string function to replace '0x{id}' to actual tokenId
    */
-  function stringReplace(string memory str, string memory src, string memory dst) internal pure returns (string memory) {
+  function stringReplace(
+    string memory str, 
+    string memory src, 
+    string memory dst
+    ) internal pure returns (string memory) {
+
     bytes memory bstr = bytes(str);
     bytes memory bsrc = bytes(src);
     bytes memory bdst = bytes(dst);
