@@ -90,7 +90,7 @@ contract SyntheticNFTTest is DSTest {
         uint newTokenId1 = _syntheticNFT.mint{value: _price}(address(0x3), address(_gameItem), tokenId1);
         cheats.prank(address(0x3));
         _syntheticNFT.transferFrom(address(0x3), address(0x4), newTokenId1);
-        assertEq(_syntheticNFT._etherBalances(newTokenId1), _price);
+        assertEq(_syntheticNFT.etherBalances(newTokenId1), _price);
     }
 
     function testFailMintRepeatedNFT() public {

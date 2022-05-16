@@ -55,16 +55,16 @@ import "erc721a/contracts/ERC721A.sol";
 contract SyntheticNFT is ERC721A {
 
   /// mapping from new tokenId to original contract address
-  mapping(uint256 => address) public _tokenIdToContract;
+  mapping(uint256 => address) public tokenIdToContract;
   
   /// mapping from new tokenId to original tokenId
-  mapping(uint256 => uint256) public _tokenIdToOriTokenId;
+  mapping(uint256 => uint256) public tokenIdToOriTokenId;
 
   /// used to keep unique original existing NFT.
-  mapping(address => mapping(uint256 => uint256)) _uniques;
+  mapping(address => mapping(uint256 => uint256)) public uniques;
   
   /// mapping from tokenId to ether balance which change when mint, transfer
-  mapping(uint256 => uint256) public _etherBalances;
+  mapping(uint256 => uint256) public etherBalances;
 
   /// constant interface signator for ERC721
   bytes4 constant internal INTERFACE_SIGNATURE_ERC721 = 0x80ac58cd;
@@ -113,16 +113,18 @@ contract SyntheticNFT is ERC721A {
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     require(_exists(tokenId), "SyntheticNFT: URI query for nonexistent token");
 
-    IERC165 tokenInterface = IERC165(_tokenIdToContract[tokenId]);
+    IERC165 tokenInterface = IERC165(tokenIdToContract[tokenId]);
 
-    uint originTokenId = _tokenIdToOriTokenId[tokenId];
+    address originContract = tokenIdToContract[tokenId];
+    uint originTokenId = tokenIdToOriTokenId[tokenId];
+
     string memory uri;
 
     if(tokenInterface.supportsInterface(INTERFACE_SIGNATURE_ERC1155)) {
-      uri = IERC1155MetadataURI(_tokenIdToContract[tokenId]).uri(originTokenId);
+      uri = IERC1155MetadataURI(originContract).uri(originTokenId);
     } else
     if(tokenInterface.supportsInterface(INTERFACE_SIGNATURE_ERC721)) {
-      uri = IERC721Metadata(_tokenIdToContract[tokenId]).tokenURI(originTokenId);
+      uri = IERC721Metadata(originContract).tokenURI(originTokenId);
     } else {
       revert("only support 721 or 1155 token");
     }
@@ -140,16 +142,6 @@ contract SyntheticNFT is ERC721A {
    */
   function exists(uint256 tokenId) public view returns (bool) {
     return _exists(tokenId);
-  }
-
-  /**
-   * @dev check original nft or erc1155 has been copied in this contract,
-   * @param contractAddr contract address of existing NFT collection, must implement tokenURI function
-   * @param tokenId tokenId of existing NFT
-   * @return uint256 zero means original token is not copied;
-   */
-  function getTokenId(address contractAddr, uint256 tokenId) public view returns (uint256) {
-    return _uniques[contractAddr][tokenId];
   }
 
   /**
@@ -177,16 +169,16 @@ contract SyntheticNFT is ERC721A {
     uint price = calcMintPrice();
     require(msg.value >= price, "SyntheticNFT: insufficient ether"); 
 
-    require(_uniques[contractAddr][tokenId] == 0, "SyntheticNFT: already minted");
+    require(uniques[contractAddr][tokenId] == 0, "SyntheticNFT: already minted");
 
     uint curr = _currentIndex;
-    _uniques[contractAddr][tokenId] = curr;
+    uniques[contractAddr][tokenId] = curr;
 
-    _tokenIdToContract[curr] = contractAddr;
-    _tokenIdToOriTokenId[curr] = tokenId;
+    tokenIdToContract[curr] = contractAddr;
+    tokenIdToOriTokenId[curr] = tokenId;
 
     if(msg.value > 0) {
-      _etherBalances[curr] += msg.value;
+      etherBalances[curr] += msg.value;
     }
 
     _mint(to, 1);
@@ -205,14 +197,14 @@ contract SyntheticNFT is ERC721A {
     
     _burn(tokenId);
 
-    uint256 amount = _etherBalances[tokenId];
-    address contractAddr = _tokenIdToContract[tokenId];
-    uint256 oriTokenId = _tokenIdToOriTokenId[tokenId];
+    uint256 amount = etherBalances[tokenId];
+    address contractAddr = tokenIdToContract[tokenId];
+    uint256 oriTokenId = tokenIdToOriTokenId[tokenId];
 
-    delete _uniques[contractAddr][oriTokenId];
-    delete _tokenIdToContract[tokenId];
-    delete _tokenIdToOriTokenId[tokenId];
-    delete _etherBalances[tokenId];
+    delete uniques[contractAddr][oriTokenId];
+    delete tokenIdToContract[tokenId];
+    delete tokenIdToOriTokenId[tokenId];
+    delete etherBalances[tokenId];
 
     // Refund the token owner the mint price.
     if(amount > 0) {
