@@ -34,14 +34,12 @@ $´´´´´´´´´$$$$$$´´´´´´´´´´$$$$´´´´´´´´´´´$
 
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
-import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "erc721a/contracts/ERC721A.sol";
 
 /**
  * @title A synthetic tool NFT contract
@@ -54,7 +52,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
  *
  * @dev the existing NFT or ERC1155 contract must implement ERC165 standard.
  */
-contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
+contract SyntheticNFT is ERC721A {
 
   /// mapping from new tokenId to original contract address
   mapping(uint256 => address) public _tokenIdToContract;
@@ -172,7 +170,7 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     address to, 
     address contractAddr, 
     uint256 tokenId
-    ) payable external nonReentrant returns (uint256) {
+    ) payable external returns (uint256) {
 
     uint price = calcMintPrice();
     require(msg.value >= price, "SyntheticNFT: insufficient ether"); 
@@ -199,7 +197,7 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
    * @dev burn token and return the mint price to the token owner.
    * @param tokenId The id of the token to refund.
    */
-  function refund(uint256 tokenId) external nonReentrant {
+  function refund(uint256 tokenId) external {
     require(_exists(tokenId), "SyntheticNFT: refund for nonexistent token");
     require(ownerOf(tokenId) == msg.sender, "SyntheticNFT: must own token");
     
@@ -216,32 +214,11 @@ contract SyntheticNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
 
     // Refund the token owner the mint price.
     if(amount > 0) {
-      payable(msg.sender).transfer(amount);
+      Address.sendValue(payable(msg.sender), amount);
     }
 
     emit Refund(tokenId, amount);
   }
-
-  function pause() public onlyOwner {
-    _pause();
-  }
-
-  function unpause() public onlyOwner {
-    _unpause();
-  }
-
-  /**
-   * @dev When the contract is paused, all token transfers are prevented in case of emergency.
-   */
-  function _beforeTokenTransfers(
-    address from,
-    address to,
-    uint256 startTokenId,
-    uint256 quantity
-  ) internal override whenNotPaused {
-    super._beforeTokenTransfers(from, to, startTokenId, quantity);
-  }
-
 
   function bytesCompare(bytes memory buf, uint idx, bytes memory rep) internal pure returns (bool) {
     if((buf.length-idx) < rep.length) {
