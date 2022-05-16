@@ -101,7 +101,8 @@ contract SyntheticNFT is ERC721A {
    * @return uint256 ether price for minting
    */
   function calcMintPrice() public view returns (uint256) {
-    return BASE_PRICE + BOND_CURVE_M * totalSupply() * totalSupply();
+    uint totalSupply = totalSupply();
+    return BASE_PRICE + BOND_CURVE_M * totalSupply * totalSupply;
   }
 
   /**
