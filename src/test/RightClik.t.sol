@@ -99,7 +99,7 @@ contract RightClikTest is DSTest {
         _syntheticNFT.mint{value: _price}(address(0x4), address(_gameItem), tokenId1);
     }
 
-    function testFailMintWithZeroValue() public {
+    function testMintWithZeroValue() public {
         uint tokenId1 = _gameItem.awardItem(address(0x1), "http://aaa.json");
         uint newTokenId1 = _syntheticNFT.mint(address(0x3), address(_gameItem), tokenId1);
         cheats.prank(address(0x3));
@@ -113,7 +113,7 @@ contract RightClikTest is DSTest {
         _syntheticNFT.refund(newTokenId1);
     }
 
-    function testFailMintWithLowValue() public {
+    function testMintWithLowValue() public {
         uint tokenId1 = _gameItem.awardItem(address(0x1), "http://aaa.json");
         uint newTokenId1 = _syntheticNFT.mint{value: 0.0001 ether}(address(0x3), address(_gameItem), tokenId1);
         cheats.prank(address(0x3));
@@ -129,31 +129,36 @@ contract RightClikTest is DSTest {
     }
     
     function testBondingCurvePrice() public {
-        uint m = 1 * 10**8;
-        uint base = _price;
+        // uint m = 1 * 10**8;
+        // uint base = _price;
         uint tokenId1 = _gameItem.awardItem(address(0x1), "http://aaa.json");
         uint tokenId2 = _gameItem.awardItem(address(0x1), "http://bbb.json");
         uint tokenId3 = _gameItem.awardItem(address(0x1), "http://ccc.json");
 
         uint price1 = _syntheticNFT.calcMintPrice();
-        assertEq(price1, base);
+        //assertEq(price1, base);
+        assertEq(price1, 0);
         _syntheticNFT.mint{value: price1}(address(0x3), address(_gameItem), tokenId1);
 
         uint price2 = _syntheticNFT.calcMintPrice();
-        assertEq(price2, base + m*1*1);
+        //assertEq(price2, base + m*1*1);
+        assertEq(price2, 0);
         _syntheticNFT.mint{value: price2}(address(0x3), address(_gameItem), tokenId2);
 
         uint price3 = _syntheticNFT.calcMintPrice();
-        assertEq(price3, base + m*2*2);
+        //assertEq(price3, base + m*2*2);
+        assertEq(price3, 0);
         uint newTokenId3 = _syntheticNFT.mint{value: price3}(address(0x3), address(_gameItem), tokenId3);
 
         uint price4 = _syntheticNFT.calcMintPrice();
-        assertEq(price4, base + m*3*3);
+        //assertEq(price4, base + m*3*3);
+        assertEq(price4, 0);
 
         cheats.prank(address(0x3));
         _syntheticNFT.refund(newTokenId3);        
         
         uint price5 = _syntheticNFT.calcMintPrice();
-        assertEq(price5, base + m*2*2);
+        //assertEq(price5, base + m*2*2);
+        assertEq(price5, 0);
     }
 }

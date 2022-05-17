@@ -1,0 +1,1 @@
+forge verify-contract --chain-id 4 --num-of-optimizations 200 --constructor-args $(cast abi-encode "constructor(string,string)" "RightClik DAO NFT" "RCNFT" 18 1000000000000000000000) --compiler-version v0.8.13+commit.abaa5c0e 0xe5357cb2ec9adae4d9b36ca8aad2354a4b0499c7 src/RightClik.sol:RightClik

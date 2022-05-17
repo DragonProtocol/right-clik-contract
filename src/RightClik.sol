@@ -81,6 +81,9 @@ contract RightClik is ERC721A {
   // max NFT total supply
   uint256 constant internal MAX_TOTAL_SUPPLY = 50000;
 
+  // free mint amount 
+  uint256 constant internal FREE_MINT_AMOUNT = 1000;
+
   /**
    * @dev Emitted when `newTokenId` token is minted to `to` based on `contractAddr` and `tokenId`, msg.sender will pay `amount` ether.
    */
@@ -105,6 +108,9 @@ contract RightClik is ERC721A {
    */
   function calcMintPrice() public view returns (uint256) {
     uint totalSupply = totalSupply();
+    if(totalSupply < FREE_MINT_AMOUNT) {
+      return 0;
+    }
     return BASE_PRICE + BOND_CURVE_M * totalSupply * totalSupply;
   }
 
